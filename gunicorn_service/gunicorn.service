@@ -1,3 +1,4 @@
+# /etc/systemd/system/gunicorn.service
 [Unit]
 Description=gunicorn daemon
 Requires=gunicorn.socket
@@ -12,7 +13,7 @@ Group=ubuntu
 # DynamicUser=yes
 # see http://0pointer.net/blog/dynamic-users-with-systemd.html
 # RuntimeDirectory=/home/ubuntu/.local/bin/
-WorkingDirectory=/home/ubuntu/webhook
+WorkingDirectory=/home/ubuntu/OnlyOneInfra
 ExecStart=/home/ubuntu/.local/bin/gunicorn --access-logfile '-'  -w 1 watcher:app
 ExecReload=/bin/kill -s HUP $MAINPID
 KillMode=mixed

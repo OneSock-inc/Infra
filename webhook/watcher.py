@@ -11,7 +11,7 @@ app = Flask(__name__)  # Standard Flask app
 
 HASH_ALGO = 'SHA256'
 PROJECT_NAME = 'OnlyOne'
-PROJECT_URL = 'https://github.com/OneSock-inc/OnlyOne.git'
+PROJECT_URL  = 'https://github.com/OneSock-inc/OnlyOne.git'
 # do not store your secret key in your code, pull from environment variable
 PROJECT_PARENT_DIR = '/home/ubuntu'
 PROJECT_WEBHOOK_KEY = os.environ.get('WEBHOOK_KEY')
