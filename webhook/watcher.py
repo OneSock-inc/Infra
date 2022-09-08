@@ -8,17 +8,24 @@ from Crypto.Hash import HMAC, SHA256
 print('Starting...')
 
 app = Flask(__name__)  # Standard Flask app
+
 HASH_ALGO = 'SHA256'
-HASH_HEADER_NAME = 'X-Hub-Signature-256'
+PROJECT_NAME = 'OnlyOne'
+PROJECT_URL = 'https://github.com/OneSock-inc/OnlyOne.git'
+# do not store your secret key in your code, pull from environment variable
+PROJECT_WEBHOOK_KEY = os.environ.get('WEBHOOK_KEY')
+
+if (not(PROJECT_URL and PROJECT_URL and PROJECT_WEBHOOK_KEY)):
+    raise Exception("Missing env variable(s)")
 
 @app.route('/', methods=['GET'])
 def default():
-    return ""
+    return "", 404
 
 @app.route('/', methods=['POST'])
 def foo():
 
-    if HASH_HEADER_NAME not in request.headers:
+    if 'X-Hub-Signature-256' not in request.headers:
         return jsonify({'message': 'failure no header'}), 404
 
     if len(request.data) == 0:
@@ -27,8 +34,10 @@ def foo():
     if len(request.data) > 2**20:
         return jsonify({'message': 'Too much data'}), 404
 
+    os.chdir("/home/ubuntu")
+
     # get the Github signature from the request header
-    header_signature = request.headers.get(HASH_HEADER_NAME)
+    header_signature = request.headers.get('X-Hub-Signature-256')
     # pass request data and signature to verify function
     verify_signature(request.get_data(), header_signature)
 
@@ -36,31 +45,28 @@ def foo():
     with open("webhook_data","w") as file:
        json_data = json.dumps(dic, indent=4)
        file.write(json_data)
-
+    
+    # This is a ping query from GitHub
     if 'zen' in dic:
         return jsonify({'message': dic['zen']}), 200
 
+    # We only want to proceed if the hook comes from main branch
     if not 'main' in dic['ref']:
        print("Pushed not to main, ignoring...")
-       print(f"Branch :{dic['ref'].split('/')}")
        return jsonify({'message': 'No action required'}), 200
     
-    print(f"Branch :{dic['ref'].split('/')}")
     print("rm last project")
-    subprocess.run(["rm","-rf","onlyone"])
-    print("git Cloning ", end="")
-    Repo.clone_from("https://github.com/OneSock-inc/OnlyOne.git", "./onlyone")
-    print("!")
-    os.chdir("./onlyone")
+    subprocess.run(["rm","-rf", PROJECT_NAME])
+    print("git clone ", end="")
+    Repo.clone_from(PROJECT_URL, "./" + PROJECT_NAME)
+    os.chdir("./" + PROJECT_NAME)
     print("Upgrading services...",end="")
     subprocess.run(["sudo" ,"docker-compose","up","--build", "-d"])
-    print("   DONE")
-    os.chdir("..")  
     return jsonify({'message': 'success'}), 200
 
 def verify_signature(request_data, header_signature):
-    # do not store your secret key in your code, pull from environment variable
-    secret_key = os.environ.get('WEBHOOK_KEY')
+    
+    secret_key = PROJECT_WEBHOOK_KEY
 
     if not header_signature:
         return jsonify({'message': 'failure'}), 404
