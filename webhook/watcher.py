@@ -13,10 +13,11 @@ HASH_ALGO = 'SHA256'
 PROJECT_NAME = 'OnlyOne'
 PROJECT_URL = 'https://github.com/OneSock-inc/OnlyOne.git'
 # do not store your secret key in your code, pull from environment variable
+PROJECT_PARENT_DIR = '/home/ubuntu'
 PROJECT_WEBHOOK_KEY = os.environ.get('WEBHOOK_KEY')
 
 if (not(PROJECT_URL and PROJECT_URL and PROJECT_WEBHOOK_KEY)):
-    raise Exception("Missing env variable(s)")
+    raise Exception("Not defined env variable(s) ... ABORTING")
 
 @app.route('/', methods=['GET'])
 def default():
@@ -34,7 +35,7 @@ def foo():
     if len(request.data) > 2**20:
         return jsonify({'message': 'Too much data'}), 404
 
-    os.chdir("/home/ubuntu")
+    os.chdir(PROJECT_PARENT_DIR)
 
     # get the Github signature from the request header
     header_signature = request.headers.get('X-Hub-Signature-256')
